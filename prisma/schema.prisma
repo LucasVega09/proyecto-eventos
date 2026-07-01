@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model evento {
+  id       Int        @id @default(autoincrement())
+  titulo   String     @db.VarChar(150)
+  fecha    DateTime
+  lugar    String     @db.VarChar(150)
+  imagen String @default("/imagenes/default.jpg") @db.VarChar(255)
+  valor    Float
+  inscrito inscrito[]
+}
+
+model inscrito {
+  id       Int    @id @default(autoincrement())
+  email    String @db.VarChar(150)
+  nombre   String @db.VarChar(150)
+  apellido String @db.VarChar(150)
+  eventoId Int
+  evento   evento @relation(fields: [eventoId], references: [id])
+}
+
+model usuario {
+  email    String @id
+  password String @db.VarChar(60)
+  nombre   String @db.VarChar(150)
+  apellido String @db.VarChar(150)
+  rol      String @db.VarChar(20)
+}

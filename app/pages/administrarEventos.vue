@@ -1,0 +1,266 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { z } from 'zod'
+
+const route = useRoute()
+
+const schemaEventos = z.object({
+    titulo: z.string().min(3, 'El titulo debe tener minimo 3 caracteres').max(100, 'El titulo debe tener como máximo 100 caracteres.'),
+    lugar: z.string().min(3, 'El lugar debe tener minimo 3 caracteres').max(100, 'El lugar debe tener como máximo 100 caracteres.'),
+    valor: z.int().min(1000, 'El valor debe ser desde 1000 en adelante').max(90000, 'El valor debe ser maximo 90.000')
+})
+
+definePageMeta({
+    middleware: ['admin']
+})
+
+const navigationItems = [
+    { label: 'Administrar Staff', to: '/gestionStaff' },
+]
+
+async function cerrarSesion() {
+    await $fetch('/api/auth/loginout', {
+        method: 'POST'
+    })
+
+    await navigateTo('/')
+}
+
+const { user } = useUserSession()
+
+import type { Evento } from '~/types/evento'
+
+const { data: eventos, pending, error, refresh } = await useFetch<Evento[]>('/api/eventos')
+
+async function agregarEvento() {
+    guardandoEvento.value = true
+
+    try {
+        const datos = new FormData()
+
+        datos.append('titulo', formEvento.titulo)
+        datos.append('fecha', formEvento.fecha)
+        datos.append('hora', formEvento.hora)
+        datos.append('lugar', formEvento.lugar)
+        datos.append('valor', String(formEvento.valor ?? ''))
+
+        if (imagen.value) {
+            datos.append('imagen', imagen.value)
+        }
+
+        await $fetch('/api/eventos', {
+            method: 'POST',
+            body: datos
+        })
+
+        await refresh()
+        limpiarFormulario()
+
+    } catch (error) {
+        errorFormularioEvento.value = getApiErrorMessage(error, 'No se pudo agregar el evento. Intente nuevamente.')
+    } finally {
+        guardandoEvento.value = false
+    }
+}
+
+const guardandoEvento = ref(false)
+const errorFormularioEvento = ref('')
+
+const formEvento = reactive({
+    titulo: '',
+    fecha: '',
+    hora: '',
+    lugar: '',
+    valor: undefined,
+    inscritos: undefined
+})
+
+function limpiarFormulario() {
+    formEvento.titulo = ''
+    formEvento.fecha = ''
+    formEvento.hora = ''
+    formEvento.lugar = ''
+    imagen.value = null
+    formEvento.valor = undefined
+    formEvento.inscritos = undefined
+    errorFormularioEvento.value = ''
+}
+
+const imagen = ref<File | null>(null)
+
+const idEliminar = ref<number | null>(null)
+
+async function eliminarEvento() {
+
+    try {
+        await $fetch('/api/eventos/id', {
+            method: 'DELETE',
+            body: {
+                id: idEliminar.value
+            }
+        })
+        await refresh()
+        idEliminar.value = null
+
+    } catch (error) {
+        errorFormularioEvento.value = getApiErrorMessage(error, 'No se pudo eliminar el evento. Intente nuevamente.')
+    }
+}
+
+//CONST PARA LISTAR INSCRITOS
+const idVerInscritos = ref<number | null>(null)
+
+const eventoSeleccionado = computed(() => {
+    return eventos.value?.find(evento => evento.id === idVerInscritos.value)
+})
+
+</script>
+
+<template>
+
+
+    <div class="min-h-screen bg-gray-950 text-white flex flex-col justify-between">
+
+        <!-- navbar -->
+        <header class="bg-gray-950">
+            <nav class="sticky top-0 bg-gray-900 mx-auto grid md:grid-cols-2 items-center justify-center">
+
+                <!-- Logo de la pagina -->
+                <div class="text-4xl font-extrabold text-purple-600 p-4 mx-4">
+                    Smart Events
+                </div>
+
+                <div class="flex justify-center items-center md:justify-end p-4 gap-3">
+
+                    <UButton color="primary" variant="soft">
+                        <NuxtLink v-for="item in navigationItems" :key="item.to" :to="item.to">
+                            {{ item.label }}
+                        </NuxtLink>
+                    </UButton>
+
+                    <span class="text-sm font-medium text-gray-300 bg-gray-800 px-3 py-1 rounded-lg">
+                        {{ user?.nombre }} {{ user?.apellido }}
+                    </span>
+
+                    <UButton
+                        class="rounded-2xl bg-purple-600 text-white font-sans hover:bg-purple-700 shadow-md px-5 py-2.5 transition-colors"
+                        @click="cerrarSesion">
+                        Cerrar Sesion
+                    </UButton>
+
+                </div>
+
+            </nav>
+        </header>
+
+        <!-- PARTE IZQUIERDA (CARDS DE EVENTOS) -->
+        <main class="flex-1 container mx-auto px-6 py-10">
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="lg:col-span-2">
+
+                    <div class="grid md:grid-cols-2 gap-6">
+
+                        <EventoCard v-for="evento in eventos" :key="evento.id" :evento="evento" />
+
+                    </div>
+                </div>
+
+                <!-- PANEL DE LA DERECHA -->
+                <div class="w-full lg:w-80 shrink-0">
+                    <UCard class="bg-gray-900 border border-gray-800 h-fit">
+
+                        <h2 class="text-2xl font-bold mb-6 text-purple-600">
+                            Agregar evento
+                        </h2>
+
+                        <UForm class="space-y-5" :schema="schemaEventos" :state="formEvento" @submit="agregarEvento">
+
+                            <UFormField name="imagen" label="Imagen">
+                                <UFileUpload v-model="imagen" accept="image/*" label="Seleccionar imagen" />
+                            </UFormField>
+
+                            <UFormField name="titulo" label="Título">
+                                <UInput v-model="formEvento.titulo" placeholder="Título" class="w-full" />
+                            </UFormField>
+
+                            <UFormField name="fecha" label="Fecha">
+                                <UInput type="date" v-model="formEvento.fecha" class="w-full" />
+                            </UFormField>
+
+                            <UFormField name="hora" label="Hora">
+                                <UInput type="time" v-model="formEvento.hora" class="w-full" />
+                            </UFormField>
+
+                            <UFormField name="lugar" label="Lugar">
+                                <UInput v-model="formEvento.lugar" placeholder="Lugar" class="w-full" />
+                            </UFormField>
+
+                            <UFormField name="valor" label="Valor">
+                                <UInput type="number" v-model="formEvento.valor" placeholder="Valor" class="w-full" />
+                            </UFormField>
+
+                            <UButton color="primary" block type="submit">
+                                Agregar evento
+                            </UButton>
+
+                        </UForm>
+
+                        <h3 class="text-xl font-semibold mb-3">
+                            Eliminar evento
+                        </h3>
+
+                        <div class="space-y-3">
+                            <UInput v-model="idEliminar" type="number" placeholder="ID del evento" class="w-full" />
+
+                            <UButton color="error" block @click="eliminarEvento">
+                                Eliminar
+                            </UButton>
+                        </div>
+
+                        <!-- <h3 class="text-xl font-semibold mb-3">
+                            Ver inscritos
+                        </h3>
+
+                        <div class="space-y-3">
+                            <UInput v-model="idVerInscritos" type="number" placeholder="ID del evento" class="w-full" />
+
+                            <div v-if="eventoSeleccionado" class="space-y-3 mt-4">
+
+                                <h4 class="font-bold text-purple-400">
+                                    Inscritos en: {{ eventoSeleccionado.titulo }}
+                                </h4>
+
+                                <div v-if="eventoSeleccionado.inscrito.length > 0" class="space-y-2">
+                                    <div v-for="persona in eventoSeleccionado.inscrito" :key="persona.id"
+                                        class="bg-gray-800 rounded-lg p-3 text-sm">
+                                        <p>Nombre: {{ persona.nombre }} {{ persona.apellido }}</p>
+                                        <p>Email: {{ persona.email }}</p>
+                                    </div>
+                                </div>
+
+                                <p v-else class="text-gray-400">
+                                    Este evento no tiene inscritos.
+                                </p>
+
+                            <div v-for="persona in eventoSeleccionado?.inscrito ?? []" :key="persona.id"
+                                class="bg-gray-800 rounded-lg p-3 text-sm">
+                                <p>{{ persona.nombre }} {{ persona.apellido }}</p>
+                                <p>{{ persona.email }}</p>
+                            </div>
+
+                            <p v-if="eventoSeleccionado && eventoSeleccionado.inscrito.length === 0"
+                                class="text-gray-400">
+                                Este evento no tiene inscritos.
+                            </p>
+                        </div> -->
+
+                    </UCard>
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+</template>
