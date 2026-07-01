@@ -167,7 +167,7 @@ function cerrarConfirmBorrar() {
                     </div>
                 </div>
 
-                <div> class="lg:col-span-1">
+                <div class="lg:col-span-1">
                     <UCard class="bg-gray-900 border border-gray-800 h-fit">
 
                         <h3 class="text-xl font-bold mb-6 text-purple-600">
