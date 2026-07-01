@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+// proyecto original
+
 import BaseModal from '~/components/BaseModal.vue';
 import type { Evento } from '~/types/evento';
 import type { Usuario } from '~/types/usuario';
@@ -186,7 +188,7 @@ function cerrarMisInscripciones() {
 
         <!-- Inicio de sesion -->
         <BaseModal v-model:open="mostrarFormInicio" title="Inicio de Sesion" description="Ingrese sus datos para inicar"
-            :ui="{ background: 'bg-slate-900'}">
+            :ui="{ background: 'bg-slate-900' }">
             <UForm class="space-y-5" :state="form" @submit="login" :schema="schemaInicioSesion">
                 <UFormField name="email" label="Email" type="email">
                     <UInput v-model="form.email" placeholder="example@gmail.com" color="neutral" variant="outline"
@@ -263,8 +265,7 @@ function cerrarMisInscripciones() {
 
         <!-- Modal de inscripciones -->
         <BaseModal v-model:open="mostrarFormInscripciones" title="Inscribirse a eventos"
-            description="Ingrese sus datos para inscribirse al evento"
-            :ui="{ background: 'bg-slate-900'}">
+            description="Ingrese sus datos para inscribirse al evento" :ui="{ background: 'bg-slate-900' }">
             <UForm class="space-y-5" @submit="guardarEvento" :schema="schemaInscripciones" :state="formInscripciones">
 
                 <UFormField name="email" label="Email" type="email">

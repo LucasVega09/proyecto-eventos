@@ -107,14 +107,8 @@ async function eliminarEvento() {
     }
 }
 
-//CONST PARA LISTAR INSCRITOS
-const idVerInscritos = ref<number | null>(null)
-
-const eventoSeleccionado = computed(() => {
-    return eventos.value?.find(evento => evento.id === idVerInscritos.value)
-})
-
 </script>
+
 
 <template>
 
@@ -218,43 +212,6 @@ const eventoSeleccionado = computed(() => {
                                 Eliminar
                             </UButton>
                         </div>
-
-                        <!-- <h3 class="text-xl font-semibold mb-3">
-                            Ver inscritos
-                        </h3>
-
-                        <div class="space-y-3">
-                            <UInput v-model="idVerInscritos" type="number" placeholder="ID del evento" class="w-full" />
-
-                            <div v-if="eventoSeleccionado" class="space-y-3 mt-4">
-
-                                <h4 class="font-bold text-purple-400">
-                                    Inscritos en: {{ eventoSeleccionado.titulo }}
-                                </h4>
-
-                                <div v-if="eventoSeleccionado.inscrito.length > 0" class="space-y-2">
-                                    <div v-for="persona in eventoSeleccionado.inscrito" :key="persona.id"
-                                        class="bg-gray-800 rounded-lg p-3 text-sm">
-                                        <p>Nombre: {{ persona.nombre }} {{ persona.apellido }}</p>
-                                        <p>Email: {{ persona.email }}</p>
-                                    </div>
-                                </div>
-
-                                <p v-else class="text-gray-400">
-                                    Este evento no tiene inscritos.
-                                </p>
-
-                            <div v-for="persona in eventoSeleccionado?.inscrito ?? []" :key="persona.id"
-                                class="bg-gray-800 rounded-lg p-3 text-sm">
-                                <p>{{ persona.nombre }} {{ persona.apellido }}</p>
-                                <p>{{ persona.email }}</p>
-                            </div>
-
-                            <p v-if="eventoSeleccionado && eventoSeleccionado.inscrito.length === 0"
-                                class="text-gray-400">
-                                Este evento no tiene inscritos.
-                            </p>
-                        </div> -->
 
                     </UCard>
                 </div>
